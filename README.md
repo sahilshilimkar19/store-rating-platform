@@ -154,7 +154,7 @@ This project is licensed under the MIT License.
 
 ## 👥 Authors
 
-- Your Name - [GitHub Profile](https://github.com/yourusername)
+- Sahil Shilimkar - [GitHub Profile](https://github.com/sahilshilimkar19)
 
 ## 🙏 Acknowledgments
 
