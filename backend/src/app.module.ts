@@ -5,15 +5,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { getTypeOrmConfig } from './config/typeorm.config';
 
+import { UsersModule } from './users/users.module';
+import { StoresModule } from './stores/stores.module';
+import { RatingsModule } from './ratings/ratings.module';
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
-    // Configuration module
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // TypeORM module with async configuration
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -21,11 +24,11 @@ import { getTypeOrmConfig } from './config/typeorm.config';
         getTypeOrmConfig(configService),
     }),
 
-    // Feature modules will be added here
-    // UsersModule,
-    // StoresModule,
-    // RatingsModule,
-    // AuthModule,
+    // ✅ ENABLE FEATURE MODULES
+    UsersModule,
+    StoresModule,
+    RatingsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
