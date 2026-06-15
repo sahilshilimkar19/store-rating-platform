@@ -1,78 +1,42 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
 import { Role } from '../common/enums/role.enum';
-import { User } from '../users/entities/user.entity';
+import { SafeUser, UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
-/** User fields safe to expose to clients (never includes the password hash). */
-export type SafeUser = Pick<
-  User,
-  'id' | 'name' | 'email' | 'address' | 'role' | 'createdAt' | 'updatedAt'
->;
-
+/**
+ * Orchestrates authentication. All user-table access is delegated to
+ * UsersService, which is the single source of truth for the users table.
+ */
 @Injectable()
 export class AuthService {
-  private static readonly SALT_ROUNDS = 10;
-
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
 
   /**
-   * Self-service signup. Always creates a NORMAL user — the role is never taken
-   * from client input, so this endpoint cannot be used to mint admins.
+   * Self-service signup. Role is hard-coded to NORMAL — this endpoint can never
+   * be used to create an admin or store owner.
    */
   async register(dto: RegisterDto): Promise<{ user: SafeUser }> {
-    const email = dto.email.toLowerCase().trim();
-
-    const existing = await this.userRepository.findOne({ where: { email } });
-    if (existing) {
-      throw new ConflictException('An account with this email already exists');
-    }
-
-    const user = this.userRepository.create({
-      name: dto.name,
-      email,
-      password: await this.hashPassword(dto.password),
-      address: dto.address ?? null,
+    const user = await this.usersService.createUser({
+      ...dto,
       role: Role.NORMAL,
     });
-
-    const saved = await this.userRepository.save(user);
-    return { user: this.toSafeUser(saved) };
+    return { user };
   }
 
   /**
    * Single login endpoint for all roles. Returns the signed access token plus
    * the safe user object (including role) so the frontend can route by role.
    */
-  async login(
-    dto: LoginDto,
-  ): Promise<{ accessToken: string; user: SafeUser }> {
-    const email = dto.email.toLowerCase().trim();
-
-    // password is select:false on the entity, so re-select it explicitly.
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.email = :email', { email })
-      .getOne();
+  async login(dto: LoginDto): Promise<{ accessToken: string; user: SafeUser }> {
+    const user = await this.usersService.findByEmail(dto.email, true);
 
     // Same generic error whether the email or the password is wrong, to avoid
     // leaking which accounts exist.
@@ -82,63 +46,32 @@ export class AuthService {
 
     return {
       accessToken: await this.signToken(user),
-      user: this.toSafeUser(user),
+      user: this.usersService.toSafeUser(user),
     };
   }
 
-  /**
-   * Authenticated password change. Verifies the current password before
-   * applying the new one, which must differ from the current password.
-   */
-  async changePassword(
+  /** Authenticated password change for the current user (any role). */
+  changePassword(
     userId: string,
     dto: ChangePasswordDto,
   ): Promise<{ message: string }> {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.id = :id', { id: userId })
-      .getOne();
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const currentMatches = await bcrypt.compare(
+    return this.usersService.changePassword(
+      userId,
       dto.currentPassword,
-      user.password,
+      dto.newPassword,
     );
-    if (!currentMatches) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    if (await bcrypt.compare(dto.newPassword, user.password)) {
-      throw new BadRequestException(
-        'New password must be different from the current password',
-      );
-    }
-
-    user.password = await this.hashPassword(dto.newPassword);
-    await this.userRepository.save(user);
-
-    return { message: 'Password updated successfully' };
   }
 
-  private hashPassword(plain: string): Promise<string> {
-    return bcrypt.hash(plain, AuthService.SALT_ROUNDS);
-  }
-
-  private signToken(user: User): Promise<string> {
+  private signToken(user: {
+    id: string;
+    email: string;
+    role: Role;
+  }): Promise<string> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
     return this.jwtService.signAsync(payload);
-  }
-
-  private toSafeUser(user: User): SafeUser {
-    const { id, name, email, address, role, createdAt, updatedAt } = user;
-    return { id, name, email, address, role, createdAt, updatedAt };
   }
 }

@@ -10,13 +10,10 @@ function Call($method, $path, $body, $token) {
     $r = Invoke-WebRequest -Uri "$base$path" -Method $method -Headers $headers -Body $json -UseBasicParsing
     return @{ status = [int]$r.StatusCode; body = ($r.Content | ConvertFrom-Json) }
   } catch {
-    $resp = $_.Exception.Response
-    $code = if ($resp) { [int]$resp.StatusCode } else { 0 }
+    $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
     $content = $null
-    if ($resp) {
-      $reader = New-Object System.IO.StreamReader($resp.GetResponseStream())
-      $raw = $reader.ReadToEnd()
-      try { $content = $raw | ConvertFrom-Json } catch { $content = $raw }
+    if ($_.ErrorDetails -and $_.ErrorDetails.Message) {
+      try { $content = $_.ErrorDetails.Message | ConvertFrom-Json } catch { $content = $_.ErrorDetails.Message }
     }
     return @{ status = $code; body = $content }
   }

@@ -1,6 +1,8 @@
 import { config as loadEnv } from 'dotenv';
 import { DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { Store } from '../stores/entities/store.entity';
+import { Rating } from '../ratings/entities/rating.entity';
 
 // Standalone DataSource used by the TypeORM CLI (migration:generate/run/revert).
 // The running app configures TypeORM separately via TypeOrmModule.forRootAsync.
@@ -13,7 +15,7 @@ export default new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User],
+  entities: [User, Store, Rating],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });
