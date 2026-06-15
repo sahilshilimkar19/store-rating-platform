@@ -74,6 +74,9 @@ export class AdminStoresController {
 
   @Get()
   findAll(@Query() filter: StoreFilterDto) {
-    return this.storesService.findAll(filter, { includeUserRating: false });
+    return this.storesService.findAll(filter, {
+      includeUserRating: false,
+      includeOwner: true,
+    });
   }
 }

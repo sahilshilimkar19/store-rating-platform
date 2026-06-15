@@ -14,10 +14,12 @@ import { CreateStoreDto } from './dto/create-store.dto';
 import { StoreFilterDto } from './dto/store-filter.dto';
 import { Store } from './entities/store.entity';
 
-/** Context describing whose user_rating (if any) to attach to store rows. */
+/** Context describing what extra columns to attach to store rows. */
 interface RatingContext {
   includeUserRating: boolean;
   userId?: string;
+  /** Include the owning user (id + name) — used by the admin store listing. */
+  includeOwner?: boolean;
 }
 
 export interface StoreView {
@@ -30,6 +32,9 @@ export interface StoreView {
   user_rating?: number | null;
   /** Id of the caller's own rating row (for updates); null if not yet rated. */
   user_rating_id?: string | null;
+  /** Owning store_owner (admin listing only); null if the store has no owner. */
+  owner_id?: string | null;
+  owner_name?: string | null;
 }
 
 interface RawStoreRow {
@@ -40,6 +45,8 @@ interface RawStoreRow {
   overall_rating: string | null;
   user_rating?: string | null;
   user_rating_id?: string | null;
+  owner_id?: string | null;
+  owner_name?: string | null;
 }
 
 @Injectable()
@@ -126,7 +133,7 @@ export class StoresService {
     );
 
     const rows = await qb.getRawMany<RawStoreRow>();
-    return rows.map((row) => this.mapRow(row, ctx.includeUserRating));
+    return rows.map((row) => this.mapRow(row, ctx));
   }
 
   /** Single store detail with overall_rating (and user_rating for normal users). */
@@ -138,7 +145,7 @@ export class StoresService {
     if (!row) {
       throw new NotFoundException('Store not found');
     }
-    return this.mapRow(row, ctx.includeUserRating);
+    return this.mapRow(row, ctx);
   }
 
   /**
@@ -184,10 +191,16 @@ export class StoresService {
         .setParameter('userId', ctx.userId);
     }
 
+    if (ctx.includeOwner) {
+      qb.leftJoin('store.owner', 'owner')
+        .addSelect('owner.id', 'owner_id')
+        .addSelect('owner.name', 'owner_name');
+    }
+
     return qb;
   }
 
-  private mapRow(row: RawStoreRow, includeUserRating: boolean): StoreView {
+  private mapRow(row: RawStoreRow, ctx: RatingContext): StoreView {
     const view: StoreView = {
       id: row.id,
       name: row.name,
@@ -195,9 +208,13 @@ export class StoresService {
       address: row.address,
       overall_rating: row.overall_rating != null ? Number(row.overall_rating) : null,
     };
-    if (includeUserRating) {
+    if (ctx.includeUserRating) {
       view.user_rating = row.user_rating != null ? Number(row.user_rating) : null;
       view.user_rating_id = row.user_rating_id ?? null;
+    }
+    if (ctx.includeOwner) {
+      view.owner_id = row.owner_id ?? null;
+      view.owner_name = row.owner_name ?? null;
     }
     return view;
   }

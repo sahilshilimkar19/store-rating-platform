@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listAdminStores,
   type AdminStoreItem,
@@ -65,6 +66,22 @@ export function AdminStoresPage() {
       header: 'Rating',
       sortable: true,
       render: (s) => formatRating(s.overall_rating),
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      // Link through to the store owner's detail page (incl. their rating).
+      render: (s) =>
+        s.owner_id ? (
+          <Link
+            to={`/admin/users/${s.owner_id}`}
+            className="font-medium text-indigo-600 hover:underline"
+          >
+            {s.owner_name ?? 'View owner'}
+          </Link>
+        ) : (
+          <span className="text-gray-400">—</span>
+        ),
     },
   ];
 

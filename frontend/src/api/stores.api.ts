@@ -7,6 +7,8 @@ export interface AdminStoreItem {
   email: string;
   address: string | null;
   overall_rating: number | null;
+  owner_id: string | null;
+  owner_name: string | null;
 }
 
 export interface ListStoresParams {
