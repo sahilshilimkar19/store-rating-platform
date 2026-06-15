@@ -24,6 +24,6 @@ export class CreateStoreDto {
 
   /** Optional link to the owning store_owner user account. */
   @IsOptional()
-  @IsUUID('4', { message: 'owner_id must be a valid UUID' })
+  @IsUUID('all', { message: 'owner_id must be a valid UUID' })
   owner_id?: string;
 }

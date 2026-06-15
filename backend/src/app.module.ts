@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StoresModule } from './stores/stores.module';
+import { RatingsModule } from './ratings/ratings.module';
+import { AdminModule } from './admin/admin.module';
 import { User } from './users/entities/user.entity';
 import { Store } from './stores/entities/store.entity';
 import { Rating } from './ratings/entities/rating.entity';
@@ -29,6 +31,8 @@ import { Rating } from './ratings/entities/rating.entity';
     AuthModule,
     UsersModule,
     StoresModule,
+    RatingsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
