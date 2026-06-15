@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { StoresModule } from './stores/stores.module';
 import { User } from './users/entities/user.entity';
 import { Store } from './stores/entities/store.entity';
 import { Rating } from './ratings/entities/rating.entity';
@@ -27,6 +28,7 @@ import { Rating } from './ratings/entities/rating.entity';
     }),
     AuthModule,
     UsersModule,
+    StoresModule,
   ],
 })
 export class AppModule {}

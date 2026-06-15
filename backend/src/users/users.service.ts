@@ -64,6 +64,11 @@ export class UsersService {
     return qb.getOne();
   }
 
+  /** Look up a user by id (without password). Used e.g. to validate store owners. */
+  findById(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
   /** Create a user with any role. Email must be unique. Returns a safe view. */
   async createUser(dto: CreateUserDto): Promise<SafeUser> {
     const email = dto.email.toLowerCase().trim();
