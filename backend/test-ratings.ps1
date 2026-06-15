@@ -32,7 +32,7 @@ $pwd = "Passw0rd!"
 
 # ---- Setup (admin via SEEDED account) ----
 Write-Host "`n[setup] login as seeded admin + create users/stores" -ForegroundColor Cyan
-$r = Call POST "/auth/login" @{ email = "admin@platform.com"; password = "Admin@1234" }
+$r = Call POST "/auth/login" @{ email = "admin@example.com"; password = "Admin@123" }
 $adminToken = $r.body.accessToken
 Check "seeded admin can log in" ($r.status -eq 200 -and $r.body.user.role -eq "admin") "status=$($r.status)"
 

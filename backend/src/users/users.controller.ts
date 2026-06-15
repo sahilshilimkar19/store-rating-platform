@@ -46,6 +46,15 @@ export class UsersController {
     return this.usersService.findAll(filter);
   }
 
+  /**
+   * Admin: minimal list of store_owner users, for selecting a store's owner.
+   * Declared before :id so it isn't captured by the dynamic param route.
+   */
+  @Get('store-owners')
+  findStoreOwners() {
+    return this.usersService.findStoreOwners();
+  }
+
   /** Admin: single user detail (includes avgRating for store owners). */
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {

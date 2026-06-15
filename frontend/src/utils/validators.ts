@@ -6,6 +6,7 @@
 
 export const NAME_MIN = 20;
 export const NAME_MAX = 60;
+export const STORE_NAME_MAX = 60;
 export const PASSWORD_MIN = 8;
 export const PASSWORD_MAX = 16;
 export const ADDRESS_MAX = 400;
@@ -40,6 +41,16 @@ export function validatePassword(value: string): string | null {
   }
   if (!SPECIAL_REGEX.test(value)) {
     return 'Password must include at least one special character';
+  }
+  return null;
+}
+
+/** Store name: required, capped at 60 (no 20-char minimum, unlike user names). */
+export function validateStoreName(value: string): string | null {
+  const v = value.trim();
+  if (!v) return 'Store name is required';
+  if (v.length > STORE_NAME_MAX) {
+    return `Name must be at most ${STORE_NAME_MAX} characters`;
   }
   return null;
 }

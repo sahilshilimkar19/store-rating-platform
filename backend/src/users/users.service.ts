@@ -69,6 +69,15 @@ export class UsersService {
     return this.userRepository.findOne({ where: { id } });
   }
 
+  /** Minimal list of store_owner users (for the store-owner picker). */
+  findStoreOwners(): Promise<Array<Pick<User, 'id' | 'name' | 'email'>>> {
+    return this.userRepository.find({
+      where: { role: Role.STORE_OWNER },
+      select: { id: true, name: true, email: true },
+      order: { name: 'ASC' },
+    });
+  }
+
   /** Create a user with any role. Email must be unique. Returns a safe view. */
   async createUser(dto: CreateUserDto): Promise<SafeUser> {
     const email = dto.email.toLowerCase().trim();

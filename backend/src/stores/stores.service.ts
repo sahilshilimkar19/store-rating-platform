@@ -28,6 +28,8 @@ export interface StoreView {
   overall_rating: number | null;
   /** Present only when the caller is a Normal User. */
   user_rating?: number | null;
+  /** Id of the caller's own rating row (for updates); null if not yet rated. */
+  user_rating_id?: string | null;
 }
 
 interface RawStoreRow {
@@ -37,6 +39,7 @@ interface RawStoreRow {
   address: string | null;
   overall_rating: string | null;
   user_rating?: string | null;
+  user_rating_id?: string | null;
 }
 
 @Injectable()
@@ -99,6 +102,9 @@ export class StoresService {
 
     if (filter.name) {
       qb.andWhere('store.name ILIKE :name', { name: `%${filter.name}%` });
+    }
+    if (filter.email) {
+      qb.andWhere('store.email ILIKE :email', { email: `%${filter.email}%` });
     }
     if (filter.address) {
       qb.andWhere('store.address ILIKE :address', {
@@ -165,7 +171,17 @@ export class StoresService {
             .where('ur.store_id = store.id')
             .andWhere('ur.user_id = :userId'),
         'user_rating',
-      ).setParameter('userId', ctx.userId);
+      )
+        .addSelect(
+          (sub) =>
+            sub
+              .select('uri.id')
+              .from(Rating, 'uri')
+              .where('uri.store_id = store.id')
+              .andWhere('uri.user_id = :userId'),
+          'user_rating_id',
+        )
+        .setParameter('userId', ctx.userId);
     }
 
     return qb;
@@ -181,6 +197,7 @@ export class StoresService {
     };
     if (includeUserRating) {
       view.user_rating = row.user_rating != null ? Number(row.user_rating) : null;
+      view.user_rating_id = row.user_rating_id ?? null;
     }
     return view;
   }

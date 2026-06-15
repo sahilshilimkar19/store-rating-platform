@@ -16,17 +16,27 @@ import { Rating } from './ratings/entities/rating.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
-        entities: [User, Store, Rating],
-        // Schema is managed via migrations; never auto-sync.
-        synchronize: false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('DATABASE_URL');
+        // Prefer a single DATABASE_URL connection string; otherwise fall back
+        // to the discrete DB_* variables.
+        const connection = url
+          ? { url }
+          : {
+              host: config.get<string>('DB_HOST', 'localhost'),
+              port: config.get<number>('DB_PORT', 5432),
+              username: config.get<string>('DB_USERNAME'),
+              password: config.get<string>('DB_PASSWORD'),
+              database: config.get<string>('DB_NAME'),
+            };
+        return {
+          type: 'postgres' as const,
+          ...connection,
+          entities: [User, Store, Rating],
+          // Schema is managed via migrations; never auto-sync.
+          synchronize: false,
+        };
+      },
     }),
     AuthModule,
     UsersModule,

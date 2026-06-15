@@ -31,3 +31,15 @@ export async function register(
   const { data } = await api.post<{ user: User }>('/auth/register', payload);
   return data;
 }
+
+/** PATCH /auth/change-password — authenticated self-service password change. */
+export async function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<{ message: string }> {
+  const { data } = await api.patch<{ message: string }>(
+    '/auth/change-password',
+    payload,
+  );
+  return data;
+}

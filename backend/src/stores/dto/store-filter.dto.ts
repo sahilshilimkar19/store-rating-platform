@@ -21,6 +21,10 @@ export class StoreFilterDto {
 
   @IsOptional()
   @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
   address?: string;
 
   @IsOptional()
