@@ -6,9 +6,9 @@ import {
   type Column,
   type SortOrder,
 } from '../../components/SortableTable';
+import { RatingValue } from '../../components/Stars';
 import { UserLayout } from '../../components/UserLayout';
 import { getErrorMessage } from '../../utils/errors';
-import { formatRating } from '../../utils/formatters';
 
 type SortKey = 'name' | 'address' | 'overall_rating' | 'user_rating';
 
@@ -86,7 +86,7 @@ export function StoresPage() {
       key: 'overall_rating',
       header: 'Overall Rating',
       sortable: true,
-      render: (s) => formatRating(s.overall_rating),
+      render: (s) => <RatingValue value={s.overall_rating} />,
     },
     {
       key: 'user_rating',
@@ -94,9 +94,11 @@ export function StoresPage() {
       sortable: true,
       render: (s) =>
         s.user_rating != null ? (
-          <span className="font-medium text-gray-900">{s.user_rating} / 5</span>
+          <span className="text-gray-900">
+            <span className="font-semibold">{s.user_rating}</span> / 5
+          </span>
         ) : (
-          <span className="text-gray-400">Not rated</span>
+          <span className="text-gray-500">Not rated</span>
         ),
     },
     {

@@ -11,8 +11,8 @@ import {
   type Column,
   type SortOrder,
 } from '../../components/SortableTable';
+import { RatingValue } from '../../components/Stars';
 import { getErrorMessage } from '../../utils/errors';
-import { formatRating } from '../../utils/formatters';
 
 export function AdminStoresPage() {
   const [name, setName] = useState('');
@@ -65,7 +65,7 @@ export function AdminStoresPage() {
       key: 'rating',
       header: 'Rating',
       sortable: true,
-      render: (s) => formatRating(s.overall_rating),
+      render: (s) => <RatingValue value={s.overall_rating} />,
     },
     {
       key: 'owner',

@@ -7,8 +7,9 @@ import {
   type Column,
   type SortOrder,
 } from '../../components/SortableTable';
+import { Stars } from '../../components/Stars';
 import { getErrorMessage } from '../../utils/errors';
-import { formatDateTime, formatRating } from '../../utils/formatters';
+import { formatDateTime } from '../../utils/formatters';
 
 type SortKey = 'name' | 'email' | 'submitted_value' | 'submitted_at';
 
@@ -93,13 +94,27 @@ export function OwnerDashboardPage() {
         <LoadingSpinner label="Loading dashboard…" />
       ) : (
         <>
-          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-card">
             <p className="text-sm font-medium text-gray-500">
               Your Store's Average Rating
             </p>
-            <p className="mt-1 text-3xl font-bold text-gray-900">
-              {avg != null ? avg.toFixed(2) : formatRating(null)}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-4">
+              {avg != null ? (
+                <span className="text-3xl font-bold leading-none text-gray-900">
+                  {avg.toFixed(2)}
+                </span>
+              ) : (
+                <span className="text-lg font-medium text-gray-500">
+                  No ratings yet
+                </span>
+              )}
+              <Stars value={avg} />
+              <span className="sr-only">
+                {avg != null
+                  ? `average rating ${avg.toFixed(1)} out of 5`
+                  : 'no ratings yet'}
+              </span>
+            </div>
           </div>
 
           <h3 className="mt-8 text-lg font-semibold text-gray-900">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { submitRating, updateRating } from '../api/ratings.api';
 import type { UserStoreItem } from '../api/stores.api';
 import { useApi } from '../hooks/useApi';
@@ -11,6 +11,10 @@ interface RatingModalProps {
   onSaved: () => void;
 }
 
+const STAR_PATH =
+  'M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.77l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z';
+
+/** SVG star selector with hover preview, exposed as an accessible radiogroup. */
 function StarSelector({
   value,
   onChange,
@@ -18,21 +22,58 @@ function StarSelector({
   value: number;
   onChange: (v: number) => void;
 }) {
+  const [hover, setHover] = useState(0);
+  const shown = hover || value;
+
+  const handleKey = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      onChange(Math.min(5, (value || 0) + 1));
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      onChange(Math.max(1, (value || 1) - 1));
+    }
+  };
+
   return (
-    <div className="flex justify-center gap-2 py-2">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          aria-label={`${star} star${star > 1 ? 's' : ''}`}
-          className={`text-3xl leading-none ${
-            star <= value ? 'text-yellow-400' : 'text-gray-300'
-          } hover:text-yellow-400`}
-        >
-          ★
-        </button>
-      ))}
+    <div
+      role="radiogroup"
+      aria-label="Rating"
+      className="flex justify-center gap-2 py-2"
+      onMouseLeave={() => setHover(0)}
+      onKeyDown={handleKey}
+    >
+      {[1, 2, 3, 4, 5].map((star) => {
+        const filled = star <= shown;
+        // Roving tabindex: the selected star is tabbable (or the first if none).
+        const tabbable = value === star || (value === 0 && star === 1);
+        return (
+          <button
+            key={star}
+            type="button"
+            role="radio"
+            aria-checked={value === star}
+            aria-label={`${star} star${star > 1 ? 's' : ''}`}
+            tabIndex={tabbable ? 0 : -1}
+            onMouseEnter={() => setHover(star)}
+            onClick={() => onChange(star)}
+            className="rounded p-0.5"
+          >
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill={filled ? '#F59E0B' : 'none'}
+              stroke={filled ? '#F59E0B' : '#E5E7EB'}
+              strokeWidth={filled ? 0 : 1.5}
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d={STAR_PATH} />
+            </svg>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -95,7 +136,7 @@ export function RatingModal({ store, onClose, onSaved }: RatingModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
         >
           Cancel
         </button>
@@ -103,7 +144,7 @@ export function RatingModal({ store, onClose, onSaved }: RatingModalProps) {
           type="button"
           onClick={handleSubmit}
           disabled={value < 1 || loading}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-700 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Saving…' : isUpdate ? 'Update Rating' : 'Submit Rating'}
         </button>

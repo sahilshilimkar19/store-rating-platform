@@ -25,7 +25,7 @@ const LINKS: Record<Role, NavItem[]> = {
   ],
 };
 
-/** Role-aware top navigation bar with identity + logout. */
+/** Role-aware sticky top navigation with identity + logout. */
 export function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -38,20 +38,25 @@ export function Navbar() {
   const links = user ? LINKS[user.role] : [];
 
   return (
-    <header className="border-b bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-8">
-          <span className="font-semibold text-gray-900">Store Rating Platform</span>
-          <nav className="flex gap-5">
+    <header className="sticky top-0 z-30 border-b border-gray-200 bg-white">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-6">
+        <div className="flex h-full items-center gap-6">
+          <span className="whitespace-nowrap font-semibold text-gray-900">
+            Store Rating Platform
+          </span>
+          <nav
+            aria-label="Primary"
+            className="flex h-full items-stretch gap-1 overflow-x-auto"
+          >
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `text-sm font-medium ${
+                  `inline-flex items-center whitespace-nowrap px-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'text-indigo-600'
-                      : 'text-gray-500 hover:text-gray-800'
+                      ? 'text-indigo-600 shadow-[inset_0_-2px_0_#4F46E5]'
+                      : 'text-gray-500 hover:text-gray-900'
                   }`
                 }
               >
@@ -62,13 +67,14 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-4 text-sm">
           {user ? (
-            <span className="hidden text-gray-600 sm:inline">
+            <span className="hidden whitespace-nowrap text-gray-500 sm:inline">
               {user.name} · {formatRole(user.role)}
             </span>
           ) : null}
           <button
+            type="button"
             onClick={handleLogout}
-            className="rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
+            className="h-8 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             Logout
           </button>
