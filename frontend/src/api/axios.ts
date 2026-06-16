@@ -1,9 +1,12 @@
 import axios from 'axios';
+import { env } from '../config/env';
+import { getErrorMessage } from '../utils/errors';
 import { clearAuth, getToken } from '../utils/storage';
+import { toastBus } from '../utils/toastBus';
 
 /** Shared axios instance pointed at the NestJS API. */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: env.apiUrl,
 });
 
 // Attach the Bearer token (if any) to every outgoing request.
@@ -31,6 +34,16 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+      return Promise.reject(error);
+    }
+
+    // Global safety-net toasts for failures pages don't surface inline:
+    // server/network errors, forbidden access, and rate limiting. Field-level
+    // 400/409/422 validation errors stay inline on their forms (no toast),
+    // and auth endpoints handle their own messaging.
+    const isServerOrNetwork = status === undefined || status >= 500;
+    if (!isAuthEndpoint && (isServerOrNetwork || status === 403 || status === 429)) {
+      toastBus.emit({ message: getErrorMessage(error), variant: 'error' });
     }
     return Promise.reject(error);
   },

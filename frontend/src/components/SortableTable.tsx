@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { EmptyState } from './EmptyState';
-import { LoadingSpinner } from './LoadingSpinner';
+import { SkeletonTable } from './SkeletonTable';
 
 export type SortOrder = 'asc' | 'desc';
 
@@ -22,7 +22,10 @@ interface SortableTableProps<T> {
   /** Called with the column key when a sortable header is clicked. */
   onSort?: (key: string) => void;
   emptyMessage?: string;
-  /** When true, shows a spinner instead of the empty state while data loads. */
+  /** Richer empty state (title + subtitle) shown instead of emptyMessage. */
+  emptyTitle?: string;
+  emptySubtitle?: string;
+  /** When true, shows shimmering skeleton rows while data loads. */
   loading?: boolean;
 }
 
@@ -66,10 +69,14 @@ export function SortableTable<T>({
   sortOrder,
   onSort,
   emptyMessage = 'No records found',
+  emptyTitle,
+  emptySubtitle,
   loading = false,
 }: SortableTableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-card">
+    <>
+    {/* Desktop / tablet: full table (sm and up) */}
+    <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-card sm:block">
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
@@ -116,14 +123,16 @@ export function SortableTable<T>({
           </tr>
         </thead>
         <tbody>
-          {data.length === 0 ? (
+          {loading ? (
+            <SkeletonTable columnCount={columns.length} />
+          ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-4 py-2">
-                {loading ? (
-                  <LoadingSpinner label="Loading…" />
-                ) : (
-                  <EmptyState message={emptyMessage} />
-                )}
+                <EmptyState
+                  message={emptyMessage}
+                  title={emptyTitle}
+                  subtitle={emptySubtitle}
+                />
               </td>
             </tr>
           ) : (
@@ -148,5 +157,59 @@ export function SortableTable<T>({
         </tbody>
       </table>
     </div>
+
+    {/* Mobile: one card per row (below sm) */}
+    <div className="space-y-3 sm:hidden">
+      {loading ? (
+        Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
+          >
+            <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+          </div>
+        ))
+      ) : data.length === 0 ? (
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card">
+          <EmptyState
+            message={emptyMessage}
+            title={emptyTitle}
+            subtitle={emptySubtitle}
+          />
+        </div>
+      ) : (
+        data.map((row) => (
+          <div
+            key={rowKey(row)}
+            className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
+          >
+            {columns.map((col) => {
+              const content = col.render
+                ? col.render(row)
+                : String((row as Record<string, unknown>)[col.key] ?? '');
+              // A header-less column (e.g. actions) spans the full card width.
+              if (!col.header) {
+                return (
+                  <div key={col.key} className="pt-1">
+                    {content}
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={col.key}
+                  className="flex items-center justify-between gap-3 text-sm"
+                >
+                  <span className="font-medium text-gray-500">{col.header}</span>
+                  <span className="text-right text-gray-800">{content}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))
+      )}
+    </div>
+    </>
   );
 }

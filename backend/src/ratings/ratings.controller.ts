@@ -10,8 +10,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -20,13 +21,16 @@ import { UpdateRatingDto } from './dto/update-rating.dto';
 import { RatingsService } from './ratings.service';
 
 /** /ratings — Normal users submit and update their own ratings. */
+@ApiTags('Ratings')
+@ApiBearerAuth('access-token')
 @Controller('ratings')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles(Role.NORMAL)
 export class RatingsController {
   constructor(private readonly ratingsService: RatingsService) {}
 
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser('userId') userId: string,
@@ -47,8 +51,10 @@ export class RatingsController {
 }
 
 /** /store-owner — dashboard for the store owner role. */
+@ApiTags('Store Owner')
+@ApiBearerAuth('access-token')
 @Controller('store-owner')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles(Role.STORE_OWNER)
 export class StoreOwnerController {
   constructor(private readonly ratingsService: RatingsService) {}

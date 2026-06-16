@@ -11,6 +11,7 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { OwnerDashboardPage } from './pages/owner/DashboardPage';
 import { StoresPage } from './pages/user/StoresPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { dashboardPath } from './utils/roles';
 
 /** Sends "/" (and unknown routes) to the right place based on auth state. */
@@ -99,7 +100,7 @@ export default function App() {
 
           {/* Fallbacks */}
           <Route path="/" element={<RootRedirect />} />
-          <Route path="*" element={<RootRedirect />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

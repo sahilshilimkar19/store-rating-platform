@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export type ToastVariant = 'success' | 'error';
+export type ToastVariant = 'success' | 'error' | 'info';
 
 const VARIANT: Record<
   ToastVariant,
@@ -8,24 +8,29 @@ const VARIANT: Record<
 > = {
   success: { bg: 'bg-green-600', role: 'status', live: 'polite' },
   error: { bg: 'bg-red-600', role: 'alert', live: 'assertive' },
+  info: { bg: 'bg-indigo-600', role: 'status', live: 'polite' },
 };
 
 function VariantIcon({ variant }: { variant: ToastVariant }) {
-  return variant === 'success' ? (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6L9 17l-5-5" />
-    </svg>
-  ) : (
+  if (variant === 'success') {
+    return (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    );
+  }
+  // error + info share the circular-glyph shape (info uses an "i", error a "!").
+  return (
     <svg
       width="18"
       height="18"
@@ -38,26 +43,41 @@ function VariantIcon({ variant }: { variant: ToastVariant }) {
       aria-hidden="true"
     >
       <circle cx="12" cy="12" r="9" />
-      <path d="M12 8v5M12 16h.01" />
+      {variant === 'info' ? (
+        <path d="M12 8h.01M11 12h1v4h1" />
+      ) : (
+        <path d="M12 8v5M12 16h.01" />
+      )}
     </svg>
   );
 }
 
-/** Auto-dismissing notification (bottom-right). Defaults to success. */
-export function Toast({
+/**
+ * A single auto-dismissing notification with a shrinking progress bar. Rendered
+ * (and stacked) by the ToastProvider — pages raise toasts via useToast(), not by
+ * mounting this directly.
+ */
+export function ToastItem({
   message,
   onClose,
   variant = 'success',
-  duration = 3000,
+  duration = 4000,
 }: {
   message: string;
   onClose: () => void;
   variant?: ToastVariant;
   duration?: number;
 }) {
+  const [progress, setProgress] = useState(100);
+
   useEffect(() => {
     const timer = setTimeout(onClose, duration);
-    return () => clearTimeout(timer);
+    // Kick the bar from 100% → 0% on the next frame so the CSS transition runs.
+    const frame = requestAnimationFrame(() => setProgress(0));
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
   }, [onClose, duration]);
 
   const v = VARIANT[variant];
@@ -66,7 +86,7 @@ export function Toast({
     <div
       role={v.role}
       aria-live={v.live}
-      className={`animate-toast-in fixed bottom-4 right-4 z-[60] flex max-w-sm items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-pop ${v.bg}`}
+      className={`animate-toast-in relative flex max-w-sm items-center gap-2 overflow-hidden rounded-lg px-4 py-3 text-sm font-medium text-white shadow-pop ${v.bg}`}
     >
       <span className="flex-none">
         <VariantIcon variant={variant} />
@@ -75,7 +95,7 @@ export function Toast({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Dismiss"
+        aria-label="Dismiss notification"
         className="flex-none text-white/80 transition-colors hover:text-white"
       >
         <svg
@@ -91,6 +111,11 @@ export function Toast({
           <path d="M3 3l10 10M13 3L3 13" />
         </svg>
       </button>
+      <span
+        className="absolute bottom-0 left-0 h-0.5 bg-white/40 transition-[width] ease-linear"
+        style={{ width: `${progress}%`, transitionDuration: `${duration}ms` }}
+        aria-hidden="true"
+      />
     </div>
   );
 }

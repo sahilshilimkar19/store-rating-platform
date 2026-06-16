@@ -8,6 +8,7 @@ export interface UserListItem {
   email: string;
   address: string | null;
   role: Role;
+  createdAt: string;
 }
 
 export interface PaginatedUsers {

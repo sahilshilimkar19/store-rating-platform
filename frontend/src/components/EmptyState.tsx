@@ -1,11 +1,18 @@
 import type { ReactNode } from 'react';
 
-/** Shown when a list/table has no data. */
+/**
+ * Shown when a list/table has no data. Provide either a single `message`, or a
+ * `title` + `subtitle` for a richer, more contextual empty state.
+ */
 export function EmptyState({
   message = 'No data found',
+  title,
+  subtitle,
   action,
 }: {
   message?: string;
+  title?: string;
+  subtitle?: string;
   action?: ReactNode;
 }) {
   return (
@@ -33,7 +40,14 @@ export function EmptyState({
           strokeLinecap="round"
         />
       </svg>
-      <p className="text-sm text-gray-500">{message}</p>
+      {title ? (
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-gray-700">{title}</p>
+          {subtitle ? <p className="text-sm text-gray-500">{subtitle}</p> : null}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500">{message}</p>
+      )}
       {action}
     </div>
   );

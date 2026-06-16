@@ -27,6 +27,7 @@ export interface StoreView {
   name: string;
   email: string;
   address: string | null;
+  created_at: string;
   overall_rating: number | null;
   /** Present only when the caller is a Normal User. */
   user_rating?: number | null;
@@ -37,11 +38,21 @@ export interface StoreView {
   owner_name?: string | null;
 }
 
+/** Paginated store listing envelope (mirrors the users list shape). */
+export interface PaginatedStores {
+  data: StoreView[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 interface RawStoreRow {
   id: string;
   name: string;
   email: string;
   address: string | null;
+  created_at: string | Date;
   overall_rating: string | null;
   user_rating?: string | null;
   user_rating_id?: string | null;
@@ -100,13 +111,62 @@ export class StoresService {
     };
   }
 
-  /** List stores with overall_rating (and user_rating for normal users). */
+  /** List stores with overall_rating (and user_rating for normal users), paginated. */
   async findAll(
     filter: StoreFilterDto,
     ctx: RatingContext,
-  ): Promise<StoreView[]> {
+  ): Promise<PaginatedStores> {
     const qb = this.buildStoreQuery(ctx);
+    this.applyFilters(qb, filter);
 
+    // sortBy is whitelisted by the DTO (@IsIn), so this map is injection-safe.
+    // 'rating'/'overall_rating' order by the computed average alias; 'user_rating'
+    // only exists for a Normal User listing, otherwise fall back to name.
+    const sortExprMap: Record<string, string> = {
+      name: 'store.name',
+      email: 'store.email',
+      address: 'store.address',
+      rating: 'overall_rating',
+      overall_rating: 'overall_rating',
+      user_rating: 'user_rating',
+    };
+    let sortExpr = sortExprMap[filter.sortBy] ?? 'store.name';
+    if (sortExpr === 'user_rating' && !ctx.includeUserRating) {
+      sortExpr = 'store.name';
+    }
+    qb.orderBy(sortExpr, filter.sortOrder.toUpperCase() as 'ASC' | 'DESC');
+
+    const page = filter.page;
+    const limit = filter.limit;
+    qb.limit(limit).offset((page - 1) * limit);
+
+    const rows = await qb.getRawMany<RawStoreRow>();
+
+    // Count matching stores (filters only — independent of the rating subqueries).
+    const countQb = this.storeRepository.createQueryBuilder('store');
+    this.applyFilters(countQb, filter);
+    const total = await countQb.getCount();
+
+    return {
+      data: rows.map((row) => this.mapRow(row, ctx)),
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
+  }
+
+  /** Apply the shared partial-match filters to a store query builder. */
+  private applyFilters(
+    qb: SelectQueryBuilder<Store>,
+    filter: StoreFilterDto,
+  ): void {
+    if (filter.search) {
+      qb.andWhere(
+        '(store.name ILIKE :search OR store.address ILIKE :search)',
+        { search: `%${filter.search}%` },
+      );
+    }
     if (filter.name) {
       qb.andWhere('store.name ILIKE :name', { name: `%${filter.name}%` });
     }
@@ -118,22 +178,6 @@ export class StoresService {
         address: `%${filter.address}%`,
       });
     }
-
-    // sortBy is whitelisted by the DTO (@IsIn), so this map is injection-safe.
-    // 'rating' orders by the computed overall_rating alias.
-    const sortExprMap: Record<string, string> = {
-      name: 'store.name',
-      email: 'store.email',
-      address: 'store.address',
-      rating: 'overall_rating',
-    };
-    qb.orderBy(
-      sortExprMap[filter.sortBy],
-      filter.sortOrder.toUpperCase() as 'ASC' | 'DESC',
-    );
-
-    const rows = await qb.getRawMany<RawStoreRow>();
-    return rows.map((row) => this.mapRow(row, ctx));
   }
 
   /** Single store detail with overall_rating (and user_rating for normal users). */
@@ -160,6 +204,7 @@ export class StoresService {
       .addSelect('store.name', 'name')
       .addSelect('store.email', 'email')
       .addSelect('store.address', 'address')
+      .addSelect('store.createdAt', 'created_at')
       .addSelect(
         (sub) =>
           sub
@@ -206,6 +251,7 @@ export class StoresService {
       name: row.name,
       email: row.email,
       address: row.address,
+      created_at: new Date(row.created_at).toISOString(),
       overall_rating: row.overall_rating != null ? Number(row.overall_rating) : null,
     };
     if (ctx.includeUserRating) {

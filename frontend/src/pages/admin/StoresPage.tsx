@@ -3,16 +3,23 @@ import { Link } from 'react-router-dom';
 import {
   listAdminStores,
   type AdminStoreItem,
+  type Paginated,
 } from '../../api/stores.api';
 import { AddStoreModal } from '../../components/AddStoreModal';
 import { AdminLayout } from '../../components/AdminLayout';
+import { Pagination } from '../../components/Pagination';
 import {
   SortableTable,
   type Column,
   type SortOrder,
 } from '../../components/SortableTable';
 import { RatingValue } from '../../components/Stars';
+import { useDebounce } from '../../hooks/useDebounce';
 import { getErrorMessage } from '../../utils/errors';
+import {
+  formatAbsoluteTime,
+  formatRelativeTime,
+} from '../../utils/formatRelativeTime';
 
 export function AdminStoresPage() {
   const [name, setName] = useState('');
@@ -20,28 +27,45 @@ export function AdminStoresPage() {
   const [address, setAddress] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
-  const [stores, setStores] = useState<AdminStoreItem[]>([]);
+  const debName = useDebounce(name);
+  const debEmail = useDebounce(email);
+  const debAddress = useDebounce(address);
+  const hasFilters = !!(debName || debEmail || debAddress);
+
+  const [result, setResult] = useState<Paginated<AdminStoreItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Reset to first page whenever filters, sort, or page size change.
+  useEffect(() => {
+    setPage(1);
+  }, [debName, debEmail, debAddress, sortBy, sortOrder, limit]);
+
   useEffect(() => {
     let active = true;
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError(null);
-      listAdminStores({ name, email, address, sortBy, sortOrder })
-        .then((res) => active && setStores(res))
-        .catch((e) => active && setError(getErrorMessage(e)))
-        .finally(() => active && setLoading(false));
-    }, 300);
+    setLoading(true);
+    setError(null);
+    listAdminStores({
+      name: debName,
+      email: debEmail,
+      address: debAddress,
+      sortBy,
+      sortOrder,
+      page,
+      limit,
+    })
+      .then((res) => active && setResult(res))
+      .catch((e) => active && setError(getErrorMessage(e)))
+      .finally(() => active && setLoading(false));
     return () => {
       active = false;
-      clearTimeout(timer);
     };
-  }, [name, email, address, sortBy, sortOrder, refreshKey]);
+  }, [debName, debEmail, debAddress, sortBy, sortOrder, page, limit, refreshKey]);
 
   const handleSort = (key: string) => {
     if (key === sortBy) {
@@ -66,6 +90,15 @@ export function AdminStoresPage() {
       header: 'Rating',
       sortable: true,
       render: (s) => <RatingValue value={s.overall_rating} />,
+    },
+    {
+      key: 'created_at',
+      header: 'Added',
+      render: (s) => (
+        <span title={formatAbsoluteTime(s.created_at)} className="text-gray-500">
+          {formatRelativeTime(s.created_at)}
+        </span>
+      ),
     },
     {
       key: 'owner',
@@ -116,14 +149,29 @@ export function AdminStoresPage() {
       <div className="mt-4">
         <SortableTable
           columns={columns}
-          data={stores}
+          data={result?.data ?? []}
           rowKey={(s) => s.id}
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          emptyMessage={loading ? 'Loading…' : 'No stores found'}
+          loading={loading}
+          emptyTitle={hasFilters ? 'No stores match your filters' : 'No stores yet'}
+          emptySubtitle={
+            hasFilters
+              ? 'Try adjusting or clearing the filters.'
+              : 'Create one to start collecting ratings.'
+          }
         />
       </div>
+
+      <Pagination
+        page={result?.page ?? 1}
+        totalPages={result?.totalPages ?? 1}
+        total={result?.total ?? 0}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+      />
 
       <AddStoreModal
         open={modalOpen}

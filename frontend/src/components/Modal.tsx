@@ -82,7 +82,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         aria-labelledby="modal-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="animate-modal-pop w-full max-w-md rounded-xl bg-white p-6 shadow-modal outline-none"
+        className="animate-modal-pop max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-modal outline-none"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 id="modal-title" className="text-lg font-semibold text-gray-900">

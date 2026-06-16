@@ -12,10 +12,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Role } from '../common/enums/role.enum';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,8 +27,10 @@ import { UsersService } from './users.service';
  * All routes require a valid JWT. By default they also require the ADMIN role
  * (class-level @Roles); individual routes override this where noted.
  */
+@ApiTags('Users')
+@ApiBearerAuth('access-token')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles(Role.ADMIN)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

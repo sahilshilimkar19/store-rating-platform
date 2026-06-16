@@ -9,7 +9,10 @@ import {
 } from '../../components/SortableTable';
 import { Stars } from '../../components/Stars';
 import { getErrorMessage } from '../../utils/errors';
-import { formatDateTime } from '../../utils/formatters';
+import {
+  formatAbsoluteTime,
+  formatRelativeTime,
+} from '../../utils/formatRelativeTime';
 
 type SortKey = 'name' | 'email' | 'submitted_value' | 'submitted_at';
 
@@ -74,9 +77,13 @@ export function OwnerDashboardPage() {
     },
     {
       key: 'submitted_at',
-      header: 'Submitted At',
+      header: 'Submitted',
       sortable: true,
-      render: (r) => formatDateTime(r.submitted_at),
+      render: (r) => (
+        <span title={formatAbsoluteTime(r.submitted_at)}>
+          {formatRelativeTime(r.submitted_at)}
+        </span>
+      ),
     },
   ];
 

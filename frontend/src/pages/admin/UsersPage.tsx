@@ -7,16 +7,20 @@ import {
 } from '../../api/users.api';
 import { AddUserModal } from '../../components/AddUserModal';
 import { AdminLayout } from '../../components/AdminLayout';
+import { Pagination } from '../../components/Pagination';
 import {
   SortableTable,
   type Column,
   type SortOrder,
 } from '../../components/SortableTable';
+import { useDebounce } from '../../hooks/useDebounce';
 import type { Role } from '../../types';
 import { getErrorMessage } from '../../utils/errors';
 import { formatRole } from '../../utils/formatters';
-
-const PAGE_SIZE = 10;
+import {
+  formatAbsoluteTime,
+  formatRelativeTime,
+} from '../../utils/formatRelativeTime';
 
 export function AdminUsersPage() {
   const navigate = useNavigate();
@@ -28,6 +32,12 @@ export function AdminUsersPage() {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const debName = useDebounce(name);
+  const debEmail = useDebounce(email);
+  const debAddress = useDebounce(address);
+  const hasFilters = !!(debName || debEmail || debAddress || role !== 'all');
 
   const [result, setResult] = useState<PaginatedUsers | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,36 +45,32 @@ export function AdminUsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Reset to first page whenever filters or sort change.
+  // Reset to first page whenever filters, sort, or page size change.
   useEffect(() => {
     setPage(1);
-  }, [name, email, address, role, sortBy, sortOrder]);
+  }, [debName, debEmail, debAddress, role, sortBy, sortOrder, limit]);
 
-  // Debounced fetch on any change.
   useEffect(() => {
     let active = true;
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError(null);
-      listUsers({
-        name,
-        email,
-        address,
-        role: role === 'all' ? undefined : role,
-        sortBy,
-        sortOrder,
-        page,
-        limit: PAGE_SIZE,
-      })
-        .then((res) => active && setResult(res))
-        .catch((e) => active && setError(getErrorMessage(e)))
-        .finally(() => active && setLoading(false));
-    }, 300);
+    setLoading(true);
+    setError(null);
+    listUsers({
+      name: debName,
+      email: debEmail,
+      address: debAddress,
+      role: role === 'all' ? undefined : role,
+      sortBy,
+      sortOrder,
+      page,
+      limit,
+    })
+      .then((res) => active && setResult(res))
+      .catch((e) => active && setError(getErrorMessage(e)))
+      .finally(() => active && setLoading(false));
     return () => {
       active = false;
-      clearTimeout(timer);
     };
-  }, [name, email, address, role, sortBy, sortOrder, page, refreshKey]);
+  }, [debName, debEmail, debAddress, role, sortBy, sortOrder, page, limit, refreshKey]);
 
   const handleSort = (key: string) => {
     if (key === sortBy) {
@@ -91,6 +97,15 @@ export function AdminUsersPage() {
       render: (u) => formatRole(u.role),
     },
     {
+      key: 'createdAt',
+      header: 'Joined',
+      render: (u) => (
+        <span title={formatAbsoluteTime(u.createdAt)} className="text-gray-500">
+          {formatRelativeTime(u.createdAt)}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: '',
       render: (u) => (
@@ -103,8 +118,6 @@ export function AdminUsersPage() {
       ),
     },
   ];
-
-  const totalPages = result?.totalPages ?? 1;
 
   return (
     <AdminLayout>
@@ -135,6 +148,7 @@ export function AdminUsersPage() {
           <option value="all">All roles</option>
           <option value="admin">System Administrator</option>
           <option value="normal">Normal User</option>
+          <option value="store_owner">Store Owner</option>
         </select>
       </div>
 
@@ -152,32 +166,24 @@ export function AdminUsersPage() {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          emptyMessage={loading ? 'Loading…' : 'No users found'}
+          loading={loading}
+          emptyTitle={hasFilters ? 'No users match your filters' : 'No users found'}
+          emptySubtitle={
+            hasFilters
+              ? 'Try adjusting or clearing the filters.'
+              : 'Add your first user to get started.'
+          }
         />
       </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-        <span>
-          {result ? `Page ${result.page} of ${totalPages} · ${result.total} total` : ''}
-        </span>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="rounded-md border border-gray-300 px-3 py-1 font-medium disabled:opacity-40"
-          >
-            Prev
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="rounded-md border border-gray-300 px-3 py-1 font-medium disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <Pagination
+        page={result?.page ?? 1}
+        totalPages={result?.totalPages ?? 1}
+        total={result?.total ?? 0}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+      />
 
       <AddUserModal
         open={modalOpen}

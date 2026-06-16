@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createStore } from '../api/stores.api';
 import { listStoreOwners, type StoreOwnerOption } from '../api/users.api';
+import { useToast } from '../context/ToastContext';
 import { useApi } from '../hooks/useApi';
 import {
   validateAddress,
@@ -19,6 +20,7 @@ interface AddStoreModalProps {
 
 export function AddStoreModal({ open, onClose, onCreated }: AddStoreModalProps) {
   const { execute, loading, error, clearError } = useApi(createStore);
+  const toast = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -80,6 +82,7 @@ export function AddStoreModal({ open, onClose, onCreated }: AddStoreModalProps) 
         owner_id: ownerId || undefined,
       });
       reset();
+      toast.success('Store created');
       onCreated();
       onClose();
     } catch {

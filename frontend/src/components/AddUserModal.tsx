@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { createUser } from '../api/users.api';
 import type { Role } from '../types';
+import { useToast } from '../context/ToastContext';
 import { useApi } from '../hooks/useApi';
 import {
   validateAddress,
@@ -26,6 +27,7 @@ const ROLE_OPTIONS = [
 
 export function AddUserModal({ open, onClose, onCreated }: AddUserModalProps) {
   const { execute, loading, error, clearError } = useApi(createUser);
+  const toast = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -69,6 +71,7 @@ export function AddUserModal({ open, onClose, onCreated }: AddUserModalProps) {
         role,
       });
       reset();
+      toast.success('User created');
       onCreated();
       onClose();
     } catch {

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { changePassword } from '../api/auth.api';
 import { FormField } from '../components/FormField';
 import { Layout } from '../components/Layout';
-import { Toast } from '../components/Toast';
+import { useToast } from '../context/ToastContext';
 import { useApi } from '../hooks/useApi';
 import {
   validatePassword,
@@ -16,11 +16,11 @@ import {
  */
 export function ChangePasswordPage() {
   const { execute, loading, error } = useApi(changePassword);
+  const toast = useToast();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [showToast, setShowToast] = useState(false);
 
   const errors = {
     current: validateRequiredPassword(current),
@@ -42,7 +42,7 @@ export function ChangePasswordPage() {
       setNext('');
       setConfirm('');
       setSubmitted(false);
-      setShowToast(true);
+      toast.success('Password updated successfully');
     } catch {
       // error surfaced below
     }
@@ -100,13 +100,6 @@ export function ChangePasswordPage() {
           {loading ? 'Updating…' : 'Update Password'}
         </button>
       </form>
-
-      {showToast ? (
-        <Toast
-          message="Password updated successfully"
-          onClose={() => setShowToast(false)}
-        />
-      ) : null}
     </Layout>
   );
 }

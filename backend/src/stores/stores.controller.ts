@@ -10,8 +10,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -24,8 +24,10 @@ import { StoresService } from './stores.service';
  * /stores — all routes require authentication. Creating a store additionally
  * requires the ADMIN role; the listings are open to every authenticated role.
  */
+@ApiTags('Stores')
+@ApiBearerAuth('access-token')
 @Controller('stores')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
@@ -66,8 +68,10 @@ export class StoresController {
  * /admin/stores — Admin-only listing. Same data as /stores but never includes
  * user_rating, with full filter + sort support.
  */
+@ApiTags('Stores')
+@ApiBearerAuth('access-token')
 @Controller('admin/stores')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminStoresController {
   constructor(private readonly storesService: StoresService) {}

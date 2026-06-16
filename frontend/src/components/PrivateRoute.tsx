@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { Role } from '../types';
-import { dashboardPath } from '../utils/roles';
+import { ForbiddenPage } from '../pages/ForbiddenPage';
 
 interface PrivateRouteProps {
   children: ReactNode;
@@ -13,7 +13,7 @@ interface PrivateRouteProps {
 /**
  * Guards a route by authentication and (optionally) role:
  * - not logged in        -> /login
- * - logged in, wrong role -> their own dashboard
+ * - logged in, wrong role -> a 403 page (with a link back to their dashboard)
  */
 export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
   const { isAuthenticated, user } = useAuth();
@@ -24,7 +24,7 @@ export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={dashboardPath(user.role)} replace />;
+    return <ForbiddenPage />;
   }
 
   return <>{children}</>;

@@ -6,9 +6,19 @@ export interface AdminStoreItem {
   name: string;
   email: string;
   address: string | null;
+  created_at: string;
   overall_rating: number | null;
   owner_id: string | null;
   owner_name: string | null;
+}
+
+/** Paginated listing envelope returned by the store endpoints. */
+export interface Paginated<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface ListStoresParams {
@@ -17,6 +27,8 @@ export interface ListStoresParams {
   address?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
 export interface CreateStorePayload {
@@ -38,25 +50,28 @@ export interface UserStoreItem {
 }
 
 export interface SearchStoresParams {
-  name?: string;
-  address?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
-/** GET /stores — list for normal users (with overall + own rating). */
+/** GET /stores — paginated list for normal users (with overall + own rating). */
 export async function listStores(
   params: SearchStoresParams = {},
-): Promise<UserStoreItem[]> {
-  const { data } = await api.get<UserStoreItem[]>('/stores', {
+): Promise<Paginated<UserStoreItem>> {
+  const { data } = await api.get<Paginated<UserStoreItem>>('/stores', {
     params: cleanParams(params),
   });
   return data;
 }
 
-/** GET /admin/stores — admin store listing with overall_rating. */
+/** GET /admin/stores — paginated admin store listing with overall_rating. */
 export async function listAdminStores(
   params: ListStoresParams,
-): Promise<AdminStoreItem[]> {
-  const { data } = await api.get<AdminStoreItem[]>('/admin/stores', {
+): Promise<Paginated<AdminStoreItem>> {
+  const { data } = await api.get<Paginated<AdminStoreItem>>('/admin/stores', {
     params: cleanParams(params),
   });
   return data;

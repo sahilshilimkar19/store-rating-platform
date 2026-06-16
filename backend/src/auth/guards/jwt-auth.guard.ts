@@ -1,10 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 
 /**
  * Guard backed by the 'jwt' Passport strategy. Validates the Bearer token and
- * populates `request.user` with the AuthenticatedUser. Use on any route that
- * requires authentication.
+ * populates `request.user` with the AuthenticatedUser.
+ *
+ * Registered globally (APP_GUARD), so every route requires authentication unless
+ * explicitly marked with @Public().
  */
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private readonly reflector: Reflector) {
+    super();
+  }
+
+  canActivate(context: ExecutionContext) {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+    return super.canActivate(context);
+  }
+}

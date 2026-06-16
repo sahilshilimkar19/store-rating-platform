@@ -31,7 +31,9 @@ export interface UserDetail {
 }
 
 export interface PaginatedUsers {
-  data: Array<Pick<User, 'id' | 'name' | 'email' | 'address' | 'role'>>;
+  data: Array<
+    Pick<User, 'id' | 'name' | 'email' | 'address' | 'role' | 'createdAt'>
+  >;
   total: number;
   page: number;
   limit: number;
@@ -112,6 +114,7 @@ export class UsersService {
         'user.email',
         'user.address',
         'user.role',
+        'user.createdAt',
       ])
       .where('user.role IN (:...roles)', {
         roles: [Role.ADMIN, Role.NORMAL],
@@ -155,6 +158,7 @@ export class UsersService {
         email: u.email,
         address: u.address,
         role: u.role,
+        createdAt: u.createdAt,
       })),
       total,
       page: filter.page,
