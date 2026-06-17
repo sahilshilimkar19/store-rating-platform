@@ -81,7 +81,13 @@ describe('UsersService', () => {
       userRepo.findOne.mockResolvedValue(null);
       userRepo.create.mockImplementation((u) => u as User);
       userRepo.save.mockImplementation(
-        async (u) => ({ id: 'u1', createdAt: new Date(), updatedAt: new Date(), ...u }) as User,
+        async (u) =>
+          ({
+            id: 'u1',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            ...u,
+          }) as User,
       );
 
       const result = await service.createUser(dto);

@@ -70,7 +70,17 @@ export function AdminUsersPage() {
     return () => {
       active = false;
     };
-  }, [debName, debEmail, debAddress, role, sortBy, sortOrder, page, limit, refreshKey]);
+  }, [
+    debName,
+    debEmail,
+    debAddress,
+    role,
+    sortBy,
+    sortOrder,
+    page,
+    limit,
+    refreshKey,
+  ]);
 
   const handleSort = (key: string) => {
     if (key === sortBy) {
@@ -133,8 +143,16 @@ export function AdminUsersPage() {
 
       {/* Filter bar */}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
-        <FilterInput placeholder="Filter by name" value={name} onChange={setName} />
-        <FilterInput placeholder="Filter by email" value={email} onChange={setEmail} />
+        <FilterInput
+          placeholder="Filter by name"
+          value={name}
+          onChange={setName}
+        />
+        <FilterInput
+          placeholder="Filter by email"
+          value={email}
+          onChange={setEmail}
+        />
         <FilterInput
           placeholder="Filter by address"
           value={address}
@@ -167,7 +185,9 @@ export function AdminUsersPage() {
           sortOrder={sortOrder}
           onSort={handleSort}
           loading={loading}
-          emptyTitle={hasFilters ? 'No users match your filters' : 'No users found'}
+          emptyTitle={
+            hasFilters ? 'No users match your filters' : 'No users found'
+          }
           emptySubtitle={
             hasFilters
               ? 'Try adjusting or clearing the filters.'

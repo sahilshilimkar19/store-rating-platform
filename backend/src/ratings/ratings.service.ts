@@ -134,8 +134,7 @@ export class RatingsService {
       .where('rating.store_id IN (:...storeIds)', { storeIds })
       .select('ROUND(AVG(rating.value), 2)', 'avg')
       .getRawOne<{ avg: string | null }>();
-    const avg_rating =
-      avgRaw && avgRaw.avg != null ? Number(avgRaw.avg) : null;
+    const avg_rating = avgRaw && avgRaw.avg != null ? Number(avgRaw.avg) : null;
 
     const rows = await this.ratingRepository
       .createQueryBuilder('rating')
@@ -167,11 +166,7 @@ export class RatingsService {
     };
   }
 
-  private toView(
-    rating: Rating,
-    userId: string,
-    storeId: string,
-  ): RatingView {
+  private toView(rating: Rating, userId: string, storeId: string): RatingView {
     return {
       id: rating.id,
       store_id: storeId,

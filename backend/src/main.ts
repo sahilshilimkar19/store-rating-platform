@@ -29,7 +29,9 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:5173').split(','),
+    origin: config
+      .get<string>('CORS_ORIGIN', 'http://localhost:5173')
+      .split(','),
     credentials: true,
   });
 

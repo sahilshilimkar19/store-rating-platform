@@ -212,7 +212,9 @@ async function seed(): Promise<void> {
 
     // 1. Default administrator.
     const adminName = process.env.ADMIN_NAME ?? 'System Administrator';
-    const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@example.com').toLowerCase().trim();
+    const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@example.com')
+      .toLowerCase()
+      .trim();
     const adminPassword = process.env.ADMIN_PASSWORD ?? 'Admin@123';
     await ensureUser(
       users,
@@ -225,7 +227,12 @@ async function seed(): Promise<void> {
     for (const o of OWNERS) {
       const owner = await ensureUser(
         users,
-        { name: o.name, email: o.email, address: o.address, role: Role.STORE_OWNER },
+        {
+          name: o.name,
+          email: o.email,
+          address: o.address,
+          role: Role.STORE_OWNER,
+        },
         passwordHash,
       );
       allStores.push(await ensureStore(stores, o.store, owner));
@@ -242,7 +249,12 @@ async function seed(): Promise<void> {
       normals.push(
         await ensureUser(
           users,
-          { name: u.name, email: u.email, address: u.address, role: Role.NORMAL },
+          {
+            name: u.name,
+            email: u.email,
+            address: u.address,
+            role: Role.NORMAL,
+          },
           passwordHash,
         ),
       );
@@ -262,10 +274,16 @@ async function seed(): Promise<void> {
 
     console.log('[seed] Demo data ready:');
     console.log(`       admin:        ${adminEmail} / ${adminPassword}`);
-    console.log(`       store owners: ${OWNERS.length} (password: ${DEMO_PASSWORD})`);
-    console.log(`       normal users: ${NORMAL_USERS.length} (password: ${DEMO_PASSWORD})`);
+    console.log(
+      `       store owners: ${OWNERS.length} (password: ${DEMO_PASSWORD})`,
+    );
+    console.log(
+      `       normal users: ${NORMAL_USERS.length} (password: ${DEMO_PASSWORD})`,
+    );
     console.log(`       stores:       ${allStores.length}`);
-    console.log(`       ratings:      up to ${ratingCount} (existing rows preserved)`);
+    console.log(
+      `       ratings:      up to ${ratingCount} (existing rows preserved)`,
+    );
   } finally {
     await AppDataSource.destroy();
   }

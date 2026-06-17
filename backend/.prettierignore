@@ -1,0 +1,6 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+# Auto-generated TypeORM migrations are left as emitted.
+src/database/migrations

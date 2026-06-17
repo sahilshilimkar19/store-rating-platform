@@ -16,7 +16,9 @@ export class UpdatePasswordDto {
   currentPassword: string;
 
   @IsString()
-  @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, { message: PASSWORD_MESSAGE })
+  @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, {
+    message: PASSWORD_MESSAGE,
+  })
   @Matches(PASSWORD_PATTERN, { message: PASSWORD_MESSAGE })
   newPassword: string;
 }

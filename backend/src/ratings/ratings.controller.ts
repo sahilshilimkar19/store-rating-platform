@@ -32,10 +32,7 @@ export class RatingsController {
   @Post()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
-  create(
-    @CurrentUser('userId') userId: string,
-    @Body() dto: CreateRatingDto,
-  ) {
+  create(@CurrentUser('userId') userId: string, @Body() dto: CreateRatingDto) {
     return this.ratingsService.create(userId, dto);
   }
 

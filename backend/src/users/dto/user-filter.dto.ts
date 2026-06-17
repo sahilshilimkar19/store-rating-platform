@@ -13,7 +13,12 @@ import { Role } from '../../common/enums/role.enum';
 export type SortOrder = 'asc' | 'desc';
 
 /** Columns the admin user list may be sorted by (whitelisted to prevent injection). */
-export const USER_SORTABLE_FIELDS = ['name', 'email', 'address', 'role'] as const;
+export const USER_SORTABLE_FIELDS = [
+  'name',
+  'email',
+  'address',
+  'role',
+] as const;
 export type UserSortField = (typeof USER_SORTABLE_FIELDS)[number];
 
 /**

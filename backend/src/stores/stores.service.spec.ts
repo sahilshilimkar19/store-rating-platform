@@ -116,7 +116,10 @@ describe('StoresService', () => {
         createdAt: now,
       } as Store);
 
-      const result = await service.createStore({ ...base, owner_id: 'owner-1' });
+      const result = await service.createStore({
+        ...base,
+        owner_id: 'owner-1',
+      });
       expect(result.owner_id).toBe('owner-1');
     });
   });

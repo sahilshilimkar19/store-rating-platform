@@ -32,7 +32,12 @@ function RowSpinner() {
       aria-label="Saving"
     >
       <circle cx="12" cy="12" r="9" stroke="#E5E7EB" strokeWidth="3" />
-      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -72,7 +77,12 @@ export function StoresPage() {
 
   const patchRow = (id: string, partial: Partial<UserStoreItem>) =>
     setResult((r) =>
-      r ? { ...r, data: r.data.map((s) => (s.id === id ? { ...s, ...partial } : s)) } : r,
+      r
+        ? {
+            ...r,
+            data: r.data.map((s) => (s.id === id ? { ...s, ...partial } : s)),
+          }
+        : r,
     );
 
   // Silent refresh (no skeleton) to reconcile the store's overall_rating.
@@ -189,7 +199,9 @@ export function StoresPage() {
       />
 
       {error ? (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
       ) : null}
 
       <div className="mt-4">
@@ -201,8 +213,12 @@ export function StoresPage() {
           sortOrder={sortOrder}
           onSort={handleSort}
           loading={loading}
-          emptyTitle={debSearch ? 'No stores match your search' : 'No stores found'}
-          emptySubtitle={debSearch ? 'Try a different name or address.' : undefined}
+          emptyTitle={
+            debSearch ? 'No stores match your search' : 'No stores found'
+          }
+          emptySubtitle={
+            debSearch ? 'Try a different name or address.' : undefined
+          }
         />
       </div>
 

@@ -1,11 +1,4 @@
-import {
-  Check,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  Unique,
-} from 'typeorm';
+import { Check, Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Store } from '../../stores/entities/store.entity';
 import { User } from '../../users/entities/user.entity';

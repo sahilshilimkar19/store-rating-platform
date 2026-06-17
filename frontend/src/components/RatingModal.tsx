@@ -96,7 +96,9 @@ export function RatingModal({ store, onClose, onSubmit }: RatingModalProps) {
   return (
     <Modal
       open={!!store}
-      title={isUpdate ? `Update Rating for ${store.name}` : `Rate ${store.name}`}
+      title={
+        isUpdate ? `Update Rating for ${store.name}` : `Rate ${store.name}`
+      }
       onClose={onClose}
     >
       <p className="text-center text-sm text-gray-500">

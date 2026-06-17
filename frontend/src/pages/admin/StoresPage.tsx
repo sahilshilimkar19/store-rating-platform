@@ -65,7 +65,16 @@ export function AdminStoresPage() {
     return () => {
       active = false;
     };
-  }, [debName, debEmail, debAddress, sortBy, sortOrder, page, limit, refreshKey]);
+  }, [
+    debName,
+    debEmail,
+    debAddress,
+    sortBy,
+    sortOrder,
+    page,
+    limit,
+    refreshKey,
+  ]);
 
   const handleSort = (key: string) => {
     if (key === sortBy) {
@@ -95,7 +104,10 @@ export function AdminStoresPage() {
       key: 'created_at',
       header: 'Added',
       render: (s) => (
-        <span title={formatAbsoluteTime(s.created_at)} className="text-gray-500">
+        <span
+          title={formatAbsoluteTime(s.created_at)}
+          className="text-gray-500"
+        >
           {formatRelativeTime(s.created_at)}
         </span>
       ),
@@ -131,8 +143,16 @@ export function AdminStoresPage() {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <FilterInput placeholder="Filter by name" value={name} onChange={setName} />
-        <FilterInput placeholder="Filter by email" value={email} onChange={setEmail} />
+        <FilterInput
+          placeholder="Filter by name"
+          value={name}
+          onChange={setName}
+        />
+        <FilterInput
+          placeholder="Filter by email"
+          value={email}
+          onChange={setEmail}
+        />
         <FilterInput
           placeholder="Filter by address"
           value={address}
@@ -155,7 +175,9 @@ export function AdminStoresPage() {
           sortOrder={sortOrder}
           onSort={handleSort}
           loading={loading}
-          emptyTitle={hasFilters ? 'No stores match your filters' : 'No stores yet'}
+          emptyTitle={
+            hasFilters ? 'No stores match your filters' : 'No stores yet'
+          }
           emptySubtitle={
             hasFilters
               ? 'Try adjusting or clearing the filters.'

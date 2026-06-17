@@ -10,7 +10,9 @@ export function ForbiddenPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-card">
         <p className="text-5xl font-bold text-amber-500">403</p>
-        <h1 className="mt-3 text-lg font-semibold text-gray-900">Access denied</h1>
+        <h1 className="mt-3 text-lg font-semibold text-gray-900">
+          Access denied
+        </h1>
         <p className="mt-1 text-sm text-gray-500">
           You don't have permission to view this page with your current role.
         </p>

@@ -38,10 +38,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const show = useCallback(
-    (message: string, variant: ToastVariant = 'success', duration = DEFAULT_DURATION) => {
+    (
+      message: string,
+      variant: ToastVariant = 'success',
+      duration = DEFAULT_DURATION,
+    ) => {
       const id = nextId.current++;
       // Keep at most MAX_VISIBLE toasts (drop the oldest).
-      setToasts((prev) => [...prev, { id, message, variant, duration }].slice(-MAX_VISIBLE));
+      setToasts((prev) =>
+        [...prev, { id, message, variant, duration }].slice(-MAX_VISIBLE),
+      );
     },
     [],
   );

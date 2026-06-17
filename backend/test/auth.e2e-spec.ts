@@ -131,7 +131,11 @@ describe('Auth & RBAC (e2e)', () => {
   it('POST /auth/register rejects an invalid name with the standard error shape', async () => {
     const res = await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ ...normalUser, email: 'short.name@example.com', name: 'Too Short' })
+      .send({
+        ...normalUser,
+        email: 'short.name@example.com',
+        name: 'Too Short',
+      })
       .expect(400);
 
     expect(res.body).toMatchObject({

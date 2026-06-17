@@ -42,7 +42,10 @@ api.interceptors.response.use(
     // 400/409/422 validation errors stay inline on their forms (no toast),
     // and auth endpoints handle their own messaging.
     const isServerOrNetwork = status === undefined || status >= 500;
-    if (!isAuthEndpoint && (isServerOrNetwork || status === 403 || status === 429)) {
+    if (
+      !isAuthEndpoint &&
+      (isServerOrNetwork || status === 403 || status === 429)
+    ) {
       toastBus.emit({ message: getErrorMessage(error), variant: 'error' });
     }
     return Promise.reject(error);

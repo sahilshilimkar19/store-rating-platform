@@ -1,5 +1,12 @@
 # Store Rating Platform
 
+[![CI](https://github.com/sahilshilimkar19/store-rating-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/sahilshilimkar19/store-rating-platform/actions/workflows/ci.yml)
+![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-34%20passing-success)
+
 A full-stack web application where users submit 1–5 star ratings for stores. A
 single login serves three roles — **System Administrator**, **Normal User**, and
 **Store Owner** — each unlocking different functionality.
@@ -58,6 +65,63 @@ single login serves three roles — **System Administrator**, **Normal User**, a
 ├── docker-compose.yml  postgres + backend + frontend
 └── README.md
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client
+        SPA["React + Vite SPA<br/>role-based routing"]
+    end
+    subgraph API["NestJS API"]
+        direction TB
+        G["Global guards<br/>JWT auth · Roles · Throttler"]
+        M["Feature modules<br/>auth · users · stores · ratings · admin"]
+        G --> M
+    end
+    DB[("PostgreSQL<br/>users · stores · ratings")]
+
+    SPA -- "JSON over HTTPS<br/>Bearer JWT" --> G
+    M -- "TypeORM<br/>(migrations, no auto-sync)" --> DB
+```
+
+Every request passes the global `JwtAuthGuard` (opt out with `@Public()`), then a
+per-route `RolesGuard`. Validation, error shaping, and rate limiting are all
+applied globally, so controllers stay thin and consistent.
+
+## Data model
+
+```mermaid
+erDiagram
+    USERS ||--o{ RATINGS : submits
+    STORES ||--o{ RATINGS : receives
+    USERS ||--o{ STORES : "owns (store_owner)"
+
+    USERS {
+        uuid id PK
+        string name
+        string email UK
+        string password "bcrypt, never selected"
+        string address
+        enum role "admin | normal | store_owner"
+    }
+    STORES {
+        uuid id PK
+        string name
+        string email UK
+        string address
+        uuid owner_id FK "nullable, SET NULL"
+    }
+    RATINGS {
+        uuid id PK
+        int value "CHECK 1..5"
+        uuid user_id FK
+        uuid store_id FK
+    }
+```
+
+One rating per `(user, store)` is enforced by a unique constraint, and the
+1–5 range is enforced by both a DTO validator and a database `CHECK`.
 
 ---
 
@@ -194,6 +258,33 @@ Full interactive reference at **`/api/docs`** (Swagger UI).
 | `PATCH /ratings/:id`           | normal      | Update own rating                        |
 | `GET /store-owner/dashboard`   | store_owner | Average rating + raters                  |
 
+## Testing & continuous integration
+
+The backend ships an automated test suite (run from `backend/`):
+
+```bash
+npm test            # unit tests (services + guards, mocked repositories)
+npm run test:e2e    # auth + RBAC end-to-end (hermetic, via pg-mem)
+npm run test:cov    # unit tests with a coverage report
+```
+
+- **Unit tests** cover the highest-risk logic: the rating duplicate/race guard,
+  the average-rating aggregation, store-owner validation, and the `RolesGuard`.
+- **E2E tests** spin up the real Nest application against an in-memory Postgres
+  (pg-mem) whose schema is built from the actual production migration — so they
+  exercise the genuine auth, validation, and role-authorization pipeline with
+  **no external database required**.
+
+Both packages are linted (ESLint) and formatted (Prettier):
+
+```bash
+npm run lint          # report (and auto-fix) lint issues
+npm run format:check  # verify formatting (CI-friendly)
+```
+
+A [GitHub Actions workflow](.github/workflows/ci.yml) runs lint, format-check,
+build, and the full test suite for both packages on every push and pull request.
+
 ## Database migrations
 
 Schema is managed exclusively via TypeORM migrations (`synchronize: false`):
@@ -202,13 +293,4 @@ Schema is managed exclusively via TypeORM migrations (`synchronize: false`):
 npm run migration:run       # apply
 npm run migration:revert    # roll back the last migration
 npm run migration:generate -- src/database/migrations/<Name>   # generate from entities
-```
-
-## Code style
-
-Both packages share a Prettier config (`.prettierrc`):
-
-```bash
-npm run format         # write
-npm run format:check   # verify (CI-friendly)
 ```

@@ -51,11 +51,7 @@ function SortIcon({ state }: { state: 'none' | 'asc' | 'desc' }) {
   }
   return (
     <svg {...common} strokeWidth={2}>
-      {state === 'asc' ? (
-        <path d="M4 10l4-4 4 4" />
-      ) : (
-        <path d="M4 6l4 4 4-4" />
-      )}
+      {state === 'asc' ? <path d="M4 10l4-4 4 4" /> : <path d="M4 6l4 4 4-4" />}
     </svg>
   );
 }
@@ -75,141 +71,149 @@ export function SortableTable<T>({
 }: SortableTableProps<T>) {
   return (
     <>
-    {/* Desktop / tablet: full table (sm and up) */}
-    <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-card sm:block">
-      <table className="min-w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
-            {columns.map((col) => {
-              const active = col.sortable === true && sortBy === col.key;
-              const clickable = col.sortable === true && !!onSort;
-              const ariaSort: 'ascending' | 'descending' | 'none' = active
-                ? sortOrder === 'asc'
-                  ? 'ascending'
-                  : 'descending'
-                : 'none';
-              return (
-                <th
-                  key={col.key}
-                  scope="col"
-                  aria-sort={col.sortable ? ariaSort : undefined}
-                  className="whitespace-nowrap px-4 py-3 text-left"
-                >
-                  {clickable ? (
-                    <button
-                      type="button"
-                      onClick={() => onSort!(col.key)}
-                      className={`inline-flex items-center gap-1 font-semibold transition-colors ${
-                        active
-                          ? 'text-gray-900'
-                          : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                    >
-                      {col.header}
-                      <span
-                        className={active ? 'text-indigo-600' : 'text-gray-400'}
+      {/* Desktop / tablet: full table (sm and up) */}
+      <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-card sm:block">
+        <table className="min-w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              {columns.map((col) => {
+                const active = col.sortable === true && sortBy === col.key;
+                const clickable = col.sortable === true && !!onSort;
+                const ariaSort: 'ascending' | 'descending' | 'none' = active
+                  ? sortOrder === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none';
+                return (
+                  <th
+                    key={col.key}
+                    scope="col"
+                    aria-sort={col.sortable ? ariaSort : undefined}
+                    className="whitespace-nowrap px-4 py-3 text-left"
+                  >
+                    {clickable ? (
+                      <button
+                        type="button"
+                        onClick={() => onSort!(col.key)}
+                        className={`inline-flex items-center gap-1 font-semibold transition-colors ${
+                          active
+                            ? 'text-gray-900'
+                            : 'text-gray-500 hover:text-gray-900'
+                        }`}
                       >
-                        <SortIcon state={active ? sortOrder ?? 'asc' : 'none'} />
+                        {col.header}
+                        <span
+                          className={
+                            active ? 'text-indigo-600' : 'text-gray-400'
+                          }
+                        >
+                          <SortIcon
+                            state={active ? (sortOrder ?? 'asc') : 'none'}
+                          />
+                        </span>
+                      </button>
+                    ) : (
+                      <span className="font-semibold text-gray-500">
+                        {col.header}
                       </span>
-                    </button>
-                  ) : (
-                    <span className="font-semibold text-gray-500">
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <SkeletonTable columnCount={columns.length} />
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-2">
+                  <EmptyState
+                    message={emptyMessage}
+                    title={emptyTitle}
+                    subtitle={emptySubtitle}
+                  />
+                </td>
+              </tr>
+            ) : (
+              data.map((row) => (
+                <tr
+                  key={rowKey(row)}
+                  className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50"
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="whitespace-nowrap px-4 py-3 text-gray-700"
+                    >
+                      {col.render
+                        ? col.render(row)
+                        : String(
+                            (row as Record<string, unknown>)[col.key] ?? '',
+                          )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile: one card per row (below sm) */}
+      <div className="space-y-3 sm:hidden">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
+            >
+              <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+              <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+            </div>
+          ))
+        ) : data.length === 0 ? (
+          <div className="rounded-xl border border-gray-200 bg-white shadow-card">
+            <EmptyState
+              message={emptyMessage}
+              title={emptyTitle}
+              subtitle={emptySubtitle}
+            />
+          </div>
+        ) : (
+          data.map((row) => (
+            <div
+              key={rowKey(row)}
+              className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
+            >
+              {columns.map((col) => {
+                const content = col.render
+                  ? col.render(row)
+                  : String((row as Record<string, unknown>)[col.key] ?? '');
+                // A header-less column (e.g. actions) spans the full card width.
+                if (!col.header) {
+                  return (
+                    <div key={col.key} className="pt-1">
+                      {content}
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={col.key}
+                    className="flex items-center justify-between gap-3 text-sm"
+                  >
+                    <span className="font-medium text-gray-500">
                       {col.header}
                     </span>
-                  )}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <SkeletonTable columnCount={columns.length} />
-          ) : data.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-2">
-                <EmptyState
-                  message={emptyMessage}
-                  title={emptyTitle}
-                  subtitle={emptySubtitle}
-                />
-              </td>
-            </tr>
-          ) : (
-            data.map((row) => (
-              <tr
-                key={rowKey(row)}
-                className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50"
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className="whitespace-nowrap px-4 py-3 text-gray-700"
-                  >
-                    {col.render
-                      ? col.render(row)
-                      : String((row as Record<string, unknown>)[col.key] ?? '')}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-
-    {/* Mobile: one card per row (below sm) */}
-    <div className="space-y-3 sm:hidden">
-      {loading ? (
-        Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
-          >
-            <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
-          </div>
-        ))
-      ) : data.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-card">
-          <EmptyState
-            message={emptyMessage}
-            title={emptyTitle}
-            subtitle={emptySubtitle}
-          />
-        </div>
-      ) : (
-        data.map((row) => (
-          <div
-            key={rowKey(row)}
-            className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 shadow-card"
-          >
-            {columns.map((col) => {
-              const content = col.render
-                ? col.render(row)
-                : String((row as Record<string, unknown>)[col.key] ?? '');
-              // A header-less column (e.g. actions) spans the full card width.
-              if (!col.header) {
-                return (
-                  <div key={col.key} className="pt-1">
-                    {content}
+                    <span className="text-right text-gray-800">{content}</span>
                   </div>
                 );
-              }
-              return (
-                <div
-                  key={col.key}
-                  className="flex items-center justify-between gap-3 text-sm"
-                >
-                  <span className="font-medium text-gray-500">{col.header}</span>
-                  <span className="text-right text-gray-800">{content}</span>
-                </div>
-              );
-            })}
-          </div>
-        ))
-      )}
-    </div>
+              })}
+            </div>
+          ))
+        )}
+      </div>
     </>
   );
 }

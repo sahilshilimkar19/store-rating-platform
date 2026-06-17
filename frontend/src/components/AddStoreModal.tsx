@@ -18,7 +18,11 @@ interface AddStoreModalProps {
   onCreated: () => void;
 }
 
-export function AddStoreModal({ open, onClose, onCreated }: AddStoreModalProps) {
+export function AddStoreModal({
+  open,
+  onClose,
+  onCreated,
+}: AddStoreModalProps) {
   const { execute, loading, error, clearError } = useApi(createStore);
   const toast = useToast();
   const [name, setName] = useState('');

@@ -78,7 +78,9 @@ export async function listAdminStores(
 }
 
 /** POST /stores — create a store, optionally owned by a store_owner. */
-export async function createStore(payload: CreateStorePayload): Promise<unknown> {
+export async function createStore(
+  payload: CreateStorePayload,
+): Promise<unknown> {
   const { data } = await api.post('/stores', payload);
   return data;
 }

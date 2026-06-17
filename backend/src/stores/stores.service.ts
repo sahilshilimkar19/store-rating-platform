@@ -162,10 +162,9 @@ export class StoresService {
     filter: StoreFilterDto,
   ): void {
     if (filter.search) {
-      qb.andWhere(
-        '(store.name ILIKE :search OR store.address ILIKE :search)',
-        { search: `%${filter.search}%` },
-      );
+      qb.andWhere('(store.name ILIKE :search OR store.address ILIKE :search)', {
+        search: `%${filter.search}%`,
+      });
     }
     if (filter.name) {
       qb.andWhere('store.name ILIKE :name', { name: `%${filter.name}%` });
@@ -252,10 +251,12 @@ export class StoresService {
       email: row.email,
       address: row.address,
       created_at: new Date(row.created_at).toISOString(),
-      overall_rating: row.overall_rating != null ? Number(row.overall_rating) : null,
+      overall_rating:
+        row.overall_rating != null ? Number(row.overall_rating) : null,
     };
     if (ctx.includeUserRating) {
-      view.user_rating = row.user_rating != null ? Number(row.user_rating) : null;
+      view.user_rating =
+        row.user_rating != null ? Number(row.user_rating) : null;
       view.user_rating_id = row.user_rating_id ?? null;
     }
     if (ctx.includeOwner) {

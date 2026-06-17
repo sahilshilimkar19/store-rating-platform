@@ -157,7 +157,9 @@ export function AdminDashboardPage() {
                   {data.topStores.map((s, i) => (
                     <tr key={s.id}>
                       <td className="py-2 text-gray-400">{i + 1}</td>
-                      <td className="py-2 font-medium text-gray-900">{s.name}</td>
+                      <td className="py-2 font-medium text-gray-900">
+                        {s.name}
+                      </td>
                       <td className="py-2">
                         <RatingValue value={s.avgRating} />
                       </td>

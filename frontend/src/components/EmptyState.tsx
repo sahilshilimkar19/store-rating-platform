@@ -17,7 +17,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-      <svg width="56" height="56" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <svg
+        width="56"
+        height="56"
+        viewBox="0 0 64 64"
+        fill="none"
+        aria-hidden="true"
+      >
         <rect
           x="12"
           y="16"
@@ -43,7 +49,9 @@ export function EmptyState({
       {title ? (
         <div className="space-y-1">
           <p className="text-sm font-semibold text-gray-700">{title}</p>
-          {subtitle ? <p className="text-sm text-gray-500">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="text-sm text-gray-500">{subtitle}</p>
+          ) : null}
         </div>
       ) : (
         <p className="text-sm text-gray-500">{message}</p>

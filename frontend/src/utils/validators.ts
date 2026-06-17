@@ -18,7 +18,8 @@ const SPECIAL_REGEX = /[^A-Za-z0-9]/;
 export function validateName(value: string): string | null {
   const v = value.trim();
   if (!v) return 'Name is required';
-  if (v.length < NAME_MIN) return `Name must be at least ${NAME_MIN} characters`;
+  if (v.length < NAME_MIN)
+    return `Name must be at least ${NAME_MIN} characters`;
   if (v.length > NAME_MAX) return `Name must be at most ${NAME_MAX} characters`;
   return null;
 }
