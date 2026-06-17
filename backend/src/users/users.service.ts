@@ -102,8 +102,9 @@ export class UsersService {
   }
 
   /**
-   * Paginated, filterable, sortable list of admin + normal users.
-   * Store owners are intentionally excluded from this listing.
+   * Paginated, filterable, sortable list of users across all roles (admin,
+   * normal, and store owner). Narrow to a single role via the optional
+   * `filter.role`.
    */
   async findAll(filter: UserFilterDto): Promise<PaginatedUsers> {
     const qb = this.userRepository
@@ -115,10 +116,7 @@ export class UsersService {
         'user.address',
         'user.role',
         'user.createdAt',
-      ])
-      .where('user.role IN (:...roles)', {
-        roles: [Role.ADMIN, Role.NORMAL],
-      });
+      ]);
 
     if (filter.name) {
       qb.andWhere('user.name ILIKE :name', { name: `%${filter.name}%` });

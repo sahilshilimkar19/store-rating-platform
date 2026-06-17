@@ -67,13 +67,13 @@ Check "invalid role -> 400" ($r.status -eq 400) "got $($r.status)"
 $r = Call POST "/users" @{ name = "Valid Name For This Account"; email = $normalEmail; password = $pwd; role = "normal" } $adminToken
 Check "duplicate email -> 409" ($r.status -eq 409) "got $($r.status)"
 
-# ============ 2) GET /users : list / filter / sort / exclude store_owner ============
-Write-Host "`n2) GET /users - list excludes store_owners" -ForegroundColor Cyan
+# ============ 2) GET /users : list / filter / sort / include store_owner ============
+Write-Host "`n2) GET /users - list includes store_owners" -ForegroundColor Cyan
 $r = Call GET "/users?limit=100" $null $adminToken
 $roles = $r.body.data | ForEach-Object { $_.role } | Sort-Object -Unique
 Check "200 + paginated envelope (total/page/limit/totalPages)" ($r.status -eq 200 -and $null -ne $r.body.total -and $null -ne $r.body.totalPages) "body keys missing"
-Check "no store_owner in list" (-not ($roles -contains "store_owner")) "roles=$($roles -join ',')"
-Check "store_owner id absent from list" (-not (($r.body.data | ForEach-Object { $_.id }) -contains $ownerId)) "owner present"
+Check "store_owner present in list" ($roles -contains "store_owner") "roles=$($roles -join ',')"
+Check "store_owner id present in list" ((($r.body.data | ForEach-Object { $_.id }) -contains $ownerId)) "owner absent"
 
 Write-Host "`n2b) GET /users - filter by email" -ForegroundColor Cyan
 $r = Call GET "/users?email=normal.$ts" $null $adminToken
